@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>3-Tier AWS VPC Architecture — Traffic Flow</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    background: #ffffff;
+    color: #1e293b;
+    margin: 0;
+    padding: 40px 20px;
+  }
+  h1 { text-align: center; font-size: 20px; color: #0f172a; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 30px; }
+
+  .internet-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .internet {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  .icon-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2.5px solid #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 6px;
+    font-size: 24px;
+    background: white;
+  }
+  .down-arrow {
+    text-align: center;
+    font-size: 22px;
+    color: #1e293b;
+    margin: 2px 0;
+    line-height: 1;
+  }
+  .arrow-label {
+    text-align: center;
+    font-size: 10px;
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .vpc {
+    border: 2px solid #1e293b;
+    border-radius: 14px;
+    max-width: 1000px;
+    margin: 10px auto 0;
+    padding: 26px 24px 20px;
+    position: relative;
+    background: #fafafa;
+  }
+  .vpc-label {
+    position: absolute;
+    top: -14px;
+    left: 24px;
+    background: #1e293b;
+    color: white;
+    padding: 4px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .cidr {
+    position: absolute;
+    top: -14px;
+    right: 24px;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .igw-center {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .igw-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 2px solid #0369a1;
+    border-radius: 10px;
+    padding: 8px 20px;
+    background: #f0f9ff;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0369a1;
+  }
+
+  .az-row { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+  .az {
+    flex: 1;
+    min-width: 400px;
+    border: 2px dashed #94a3b8;
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+  }
+  .az-label {
+    position: absolute;
+    top: -12px;
+    left: 16px;
+    background: #fafafa;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+  }
+
+  .subnet {
+    border: 2px solid;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+  }
+  .public { border-color: #0ea5e9; background: #f0f9ff; }
+  .private { border-color: #f59e0b; background: #fffbeb; margin-top: 14px; }
+  .subnet-label { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .public .subnet-label { color: #0369a1; }
+  .private .subnet-label { color: #b45309; }
+
+  .res-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .res {
+    text-align: center;
+    flex: 1;
+  }
+  .res-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 4px;
+    font-size: 17px;
+    background: white;
+  }
+  .public .res-icon { border-color: #0ea5e9; }
+  .private .res-icon { border-color: #f59e0b; }
+  .res-name { font-size: 10px; font-weight: 700; color: #334155; }
+  .res-sub { font-size: 9px; color: #94a3b8; }
+  .h-arrow { font-size: 16px; color: #64748b; flex-shrink: 0; }
+
+  .cross-flow {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0;
+  }
+  .cross-arrow {
+    font-size: 20px;
+    color: #1e293b;
+  }
+  .cross-label {
+    font-size: 9px;
+    color: #64748b;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .nat-note {
+    text-align: center;
+    font-size: 10px;
+    color: #b45309;
+    font-weight: 600;
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  .legend {
+    max-width: 1000px;
+    margin: 20px auto 0;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    font-size: 11px;
+    color: #64748b;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-box { width: 12px; height: 12px; border-radius: 3px; border: 2px solid; }
+</style>
+</head>
+<body>
+
+<h1>3-Tier AWS Architecture — Traffic Flow</h1>
+<div class="subtitle">aws-3tier-infrastructure — arrows trace the actual path of a request</div>
+
+<div class="internet-row">
+  <div class="internet">
+    <div class="icon-circle">🌐</div>
+    Internet / User
+  </div>
+</div>
+<div class="down-arrow">↓</div>
+<div class="arrow-label">request enters through IGW</div>
+
+<div class="vpc">
+  <div class="vpc-label">VPC</div>
+  <div class="cidr">10.0.0.0/16</div>
+
+  <div class="igw-center">
+    <div class="igw-icon">🚪 Internet Gateway</div>
+  </div>
+  <div class="down-arrow">↓ ↑</div>
+  <div class="arrow-label">IGW routes to ALB inbound &nbsp;·&nbsp; NAT Gateways route outbound through IGW to internet</div>
+
+  <div class="az-row">
+    <div class="az">
+      <div class="az-label">AVAILABILITY ZONE A</div>
+
+      <div class="subnet public">
+        <div class="subnet-label">PUBLIC SUBNET A</div>
+        <div class="res-flow">
+          <div class="res">
+            <div class="res-icon">⚖️</div>
+            <div class="res-name">ALB node</div>
+            <div class="res-sub">receives inbound</div>
+          </div>
+          <div class="res">
+            <div class="res-icon">🔁</div>
+            <div class="res-name">NAT Gateway</div>
+            <div class="res-sub">relays outbound</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cross-flow">
+        <div>
+          <div class="cross-arrow">↓</div>
+          <div class="cross-label">ALB forwards request to EC2</div>
+        </div>
+      </div>
+
+      <div class="subnet private">
+        <div class="subnet-label">PRIVATE SUBNET A</div>
+        <div class="res-flow">
+          <div class="res">
+            <div class="res-icon">🖥️</div>
+            <div class="res-name">EC2 instance</div>
+          </div>
+          <div class="h-arrow">⇄</div>
+          <div class="res">
+            <div class="res-icon">🗄️</div>
+            <div class="res-name">RDS primary</div>
+          </div>
+        </div>
+      </div>
+      <div class="nat-note">↑ EC2 → NAT Gateway → IGW → Internet (outbound only)</div>
+    </div>
+
+    <div class="az">
+      <div class="az-label">AVAILABILITY ZONE B</div>
+
+      <div class="subnet public">
+        <div class="subnet-label">PUBLIC SUBNET B</div>
+        <div class="res-flow">
+          <div class="res">
+            <div class="res-icon">⚖️</div>
+            <div class="res-name">ALB node</div>
+            <div class="res-sub">receives inbound</div>
+          </div>
+          <div class="res">
+            <div class="res-icon">🔁</div>
+            <div class="res-name">NAT Gateway</div>
+            <div class="res-sub">relays outbound</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cross-flow">
+        <div>
+          <div class="cross-arrow">↓</div>
+          <div class="cross-label">ALB forwards request to EC2</div>
+        </div>
+      </div>
+
+      <div class="subnet private">
+        <div class="subnet-label">PRIVATE SUBNET B</div>
+        <div class="res-flow">
+          <div class="res">
+            <div class="res-icon">🖥️</div>
+            <div class="res-name">EC2 instance</div>
+          </div>
+          <div class="h-arrow">⇄</div>
+          <div class="res">
+            <div class="res-icon">🗄️</div>
+            <div class="res-name">RDS standby</div>
+          </div>
+        </div>
+      </div>
+      <div class="nat-note">↑ EC2 → NAT Gateway → IGW → Internet (outbound only)</div>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-box" style="background:#f0f9ff;border-color:#0ea5e9;"></div>Public subnet</div>
+  <div class="legend-item"><div class="legend-box" style="background:#fffbeb;border-color:#f59e0b;"></div>Private subnet</div>
+</div>
+
+</body>
+</html>
