@@ -15,6 +15,15 @@ resource "aws_instance" "main" {
   subnet_id              = aws_subnet.private_a.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
+  user_data = <<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y httpd mysql
+    systemctl start httpd
+    systemctl enable httpd
+    echo "<h1>3-Tier Infrastructure - EC2 Instance Running</h1><p>Deployed via Terraform.</p>" > /var/www/html/index.html
+  EOF
+
   tags = {
     Name = "3tier-ec2"
   }
