@@ -6,6 +6,8 @@ This is a rebuild of an earlier version of this project, done independently usin
 
 **[Read the full build log →](./BUILD_LOG.md)** — every milestone, plus the real bugs hit and fixed along the way.
 
+![3-tier AWS architecture diagram](./docs/architecture-diagram.jpeg)
+
 ## Contents
 
 - [Architecture](#architecture)
