@@ -3,7 +3,7 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["al2023-ami-2023*-x86_64"]
   }
 
   owners = ["amazon"]
@@ -19,7 +19,7 @@ resource "aws_instance" "main" {
   user_data = <<-EOF
     #!/bin/bash
     yum update -y
-    yum install -y httpd mysql
+    yum install -y httpd mariadb105
     systemctl start httpd
     systemctl enable httpd
     echo "<h1>3-Tier Infrastructure - EC2 Instance Running</h1><p>Deployed via Terraform.</p>" > /var/www/html/index.html

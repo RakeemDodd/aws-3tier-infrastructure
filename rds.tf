@@ -1,5 +1,5 @@
 resource "aws_db_subnet_group" "main" {
-  name       = "3tier-db-subnet-group"
+  name       = "app-db-subnet-group"
   subnet_ids = [aws_subnet.private_a.id, aws_subnet.private_b.id]
 
   tags = {
