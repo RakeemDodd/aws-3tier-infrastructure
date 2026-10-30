@@ -2,7 +2,9 @@
 
 A 3-tier AWS architecture — VPC, EC2, RDS, and an Application Load Balancer — built from scratch in Terraform, deployed to real AWS infrastructure, and verified end-to-end.
 
-This is a rebuild of an earlier version of this project, done independently using the official Terraform provider docs as the primary reference, with the goal of fully understanding and being able to defend every component rather than copying a pattern.
+This is a rebuild of an [earlier version](https://github.com/RakeemDodd/Terraform-3tier-AWS) of this project, done independently using the official Terraform provider docs as the primary reference, with the goal of fully understanding and being able to defend every component rather than copying a pattern.
+
+> **Status:** Part A (team-grade infrastructure as code) is in progress: remote state, modules, dev and prod environments, and a CI/CD pipeline. The original Stage 1 version is preserved as the [v1.0-flat release](https://github.com/RakeemDodd/aws-3tier-infrastructure/releases/tag/v1.0-flat). Plan and decisions: [docs/PART_A_PLAN.md](docs/PART_A_PLAN.md).
 
 **[Read the full build log →](./BUILD_LOG.md)** — every milestone, plus the real bugs hit and fixed along the way.
 
@@ -105,6 +107,7 @@ The real bugs hit and fixed during verification — an AMI variant without the S
 | `terraform.tfvars` | Sensitive values — git-ignored, never committed |
 | `.gitignore` | Excludes state files, `.tfvars`, and other sensitive/generated files |
 | `BUILD_LOG.md` | Full milestone and debugging log |
+| `docs/PART_A_PLAN.md` | Part A plan: decisions and trade-offs |
 
 ---
 
