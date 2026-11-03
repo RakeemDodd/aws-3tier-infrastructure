@@ -120,6 +120,7 @@ Plan, decisions and trade-offs: [docs/PART_A_PLAN.md](docs/PART_A_PLAN.md). The 
 - Protected main with a branch ruleset: pull requests required, force pushes and deletion blocked, merge commits only
 - Tagged the Stage 1 repo as v1.0-flat and published it as a GitHub release, a permanent "before" snapshot
 - Wrote the Part A plan: the options, trade-offs and choice for each major decision
+- Reviewed every EC2 setting, including the defaults the code doesn't set, and found the gaps to fix: an unencrypted root disk (account default encryption is off), IMDSv2 inherited from the image rather than enforced in code, AMI updates forcing instance replacement, and fully open egress ([docs/EC2_NOTES.md](docs/EC2_NOTES.md))
 
 ### Troubleshooting
 
