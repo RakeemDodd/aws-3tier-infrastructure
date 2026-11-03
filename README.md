@@ -108,6 +108,7 @@ The real bugs hit and fixed during verification — an AMI variant without the S
 | `.gitignore` | Excludes state files, `.tfvars`, and other sensitive/generated files |
 | `BUILD_LOG.md` | Full milestone and debugging log |
 | `docs/PART_A_PLAN.md` | Part A plan: decisions and trade-offs |
+| `docs/EC2_NOTES.md` | Why each EC2 setting is set the way it is, and the gaps to close |
 
 ---
 
