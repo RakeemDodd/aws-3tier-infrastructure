@@ -16,6 +16,25 @@ resource "aws_instance" "main" {
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
+  # Stay within free CPU credits instead of paying for extra bursts
+  credit_specification {
+    cpu_credits = "standard"
+  }
+
+  # Require IMDSv2 tokens, which blocks credential theft through SSRF
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  # Encrypt the server's disk
+  root_block_device {
+    encrypted = true
+  }
+
+  # Startup script edits rebuild the instance, so the change actually runs
+  user_data_replace_on_change = true
+
   user_data = <<-EOF
     #!/bin/bash
     yum update -y
@@ -27,5 +46,11 @@ resource "aws_instance" "main" {
 
   tags = {
     Name = "3tier-ec2"
+  }
+
+  lifecycle {
+    # New Amazon Linux releases don't replace a running instance.
+    # Every fresh build still gets the latest image.
+    ignore_changes = [ami]
   }
 }
