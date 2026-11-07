@@ -121,6 +121,8 @@ Plan, decisions and trade-offs: [docs/PART_A_PLAN.md](docs/PART_A_PLAN.md). The 
 - Tagged the Stage 1 repo as v1.0-flat and published it as a GitHub release, a permanent "before" snapshot
 - Wrote the Part A plan: the options, trade-offs and choice for each major decision
 - Reviewed every EC2 setting, including the defaults the code doesn't set, and found the gaps to fix: an unencrypted root disk (account default encryption is off), IMDSv2 inherited from the image rather than enforced in code, AMI updates forcing instance replacement, and fully open egress ([docs/EC2_NOTES.md](docs/EC2_NOTES.md))
+- Built a separate bootstrap setup for Terraform's remote state: an S3 bucket that's versioned, encrypted, blocks all public access, only accepts HTTPS, expires old state versions after 90 days, and can't be destroyed by Terraform. Its own state lives in the same bucket
+- Brought the two console-created budgets under Terraform with import blocks, protected both from deletion, and kept the alert email out of the repo
 
 ### Troubleshooting
 
@@ -139,3 +141,11 @@ Plan, decisions and trade-offs: [docs/PART_A_PLAN.md](docs/PART_A_PLAN.md). The 
 - **Cause:** each verification request replaces the previous code, so the email I opened carried a code that was no longer valid
 - **Fix:** resent once, opened only the newest email, confirmed the sender and link were genuine, and verified. The second budget was verified automatically, since verification is per account, not per budget
 - **Lesson:** trigger it once, wait, check spam, and use only the newest email. An alert that can't reach you isn't a guardrail
+
+#### Generated import code failed validation
+
+- **Symptom:** `terraform plan -generate-config-out` wrote the budget resources, but the plan failed with "all of `filter_expression,metrics` must be specified"
+- **How I found it:** read the generated file line by line and compared it with the budgets in the console. It included a `metrics` setting that AWS fills in by default, without the setting the provider requires alongside it
+- **Cause:** the generator copies every value AWS returns, including defaults the provider only accepts together with other settings. Terraform documents the feature as experimental
+- **Fix:** removed `metrics` and the other empty defaults, added `ignore_changes = [metrics]` so Terraform leaves AWS's default alone, and applied only once the plan showed nothing but tag changes
+- **Lesson:** generated code is a first draft. Review it line by line, and only apply an import when the plan shows exactly the changes you intended
