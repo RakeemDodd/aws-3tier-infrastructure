@@ -7,6 +7,8 @@ resource "aws_eip" "nat_a" {
 }
 
 resource "aws_eip" "nat_b" {
+  count = local.second_nat_gateway ? 1 : 0
+
   domain = "vpc"
 
   tags = {
@@ -26,7 +28,9 @@ resource "aws_nat_gateway" "nat_a" {
 }
 
 resource "aws_nat_gateway" "nat_b" {
-  allocation_id = aws_eip.nat_b.id
+  count = local.second_nat_gateway ? 1 : 0
+
+  allocation_id = aws_eip.nat_b[count.index].id
   subnet_id     = aws_subnet.public_b.id
 
   tags = {

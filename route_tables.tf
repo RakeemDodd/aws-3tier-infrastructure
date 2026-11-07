@@ -38,8 +38,9 @@ resource "aws_route_table" "private_b" {
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat_b.id
+    cidr_block = "0.0.0.0/0"
+    # Demo mode has no NAT gateway B, so this subnet shares NAT gateway A
+    nat_gateway_id = coalesce(one(aws_nat_gateway.nat_b[*].id), aws_nat_gateway.nat_a.id)
   }
 
   tags = {
