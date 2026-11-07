@@ -50,19 +50,23 @@ Part A turns this single-developer project into infrastructure a team could run:
 - **CI pipeline:** format, validate and plan on every pull request, a Checkov security scan, OIDC instead of stored keys, approval before prod, and a scheduled drift check
 
 ## Order of work
-1. ✅ Tag v1.0-flat and publish the release
-2. ✅ Create AWS budget alerts
-3. Document why each EC2 setting is set the way it is
-4. Restructure the troubleshooting log
-5. Bootstrap the S3 state bucket and import the budgets
-6. Add the demo-mode switch and provider block
-7. Apply in demo mode, destroying at the end of every session
-8. Move state to the S3 backend with native locking
-9. Reorganize the repo layout
-10. Refactor into modules with `moved` blocks
-11. Run dev and prod from one codebase
-12. Add default tags and move the database password out of state
-13. Build the GitHub Actions pipeline
+
+Each step has an ID (A0–A13). Branch names and pull request titles use it, so every change links back to this list.
+
+- ✅ **A0** Write this plan
+- ✅ **A1** Tag v1.0-flat and publish the release
+- ✅ **A2** Create AWS budget alerts
+- ✅ **A3** Document why each EC2 setting is set the way it is ([EC2_NOTES.md](EC2_NOTES.md))
+- ✅ **A4** Use one troubleshooting format (Symptom, How I found it, Cause, Fix, Lesson) for new entries in the [build log](../BUILD_LOG.md)
+- ✅ **A5** Bootstrap the S3 state bucket and import the budgets
+- **A6** Add the demo-mode switch and provider block
+- **A7** Apply in demo mode, destroying at the end of every session
+- **A8** Move state to the S3 backend with native locking
+- **A9** Reorganize the repo layout
+- **A10** Refactor into modules with `moved` blocks
+- **A11** Run dev and prod from one codebase
+- **A12** Add the Environment tag and move the database password out of state
+- **A13** Build the GitHub Actions pipeline
 
 ## Risks and how they're handled
 - **Losing state during the S3 migration:** back up the local state first; the migration passes only if `terraform plan` shows no changes
