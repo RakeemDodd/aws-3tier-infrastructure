@@ -128,6 +128,7 @@ Plan, decisions and trade-offs: [docs/PART_A_PLAN.md](docs/PART_A_PLAN.md). The 
 - Hardened the EC2 instance (IMDSv2 required, encrypted root disk, standard CPU credits, startup-script changes rebuild the instance, new Amazon Linux releases no longer force a replacement) and turned on EBS encryption by default for the account
 - Ran the first deploy in demo mode from a saved plan (28 resources), confirmed no drift right after the apply, and verified on the live resources: the web page loaded through the load balancer, IMDSv2 was required, the root disk was encrypted, CPU credits were standard and the database was single-AZ. Destroyed it the same session with a clean leftover check (about 25 minutes, roughly $0.05)
 - Added Terraform plan files to `.gitignore`, since a saved plan can contain sensitive values
+- Moved the app's Terraform state from my laptop into the S3 backend with native locking: deployed in demo mode, backed up the local state, ran `terraform init -migrate-state`, then confirmed the same 29 state entries and a no-changes plan reading from S3. Destroyed the stack through the S3 backend afterwards, with a clean leftover check
 
 ### Troubleshooting
 
