@@ -59,7 +59,7 @@ Each step has an ID (A0–A13). Branch names and pull request titles use it, so 
 - ✅ **A3** Document why each EC2 setting is set the way it is ([EC2_NOTES.md](EC2_NOTES.md))
 - ✅ **A4** Use one troubleshooting format (Symptom, How I found it, Cause, Fix, Lesson) for new entries in the [build log](../BUILD_LOG.md)
 - ✅ **A5** Bootstrap the S3 state bucket and import the budgets
-- **A6** Add the demo-mode switch and provider block
+- ✅ **A6** Add the demo-mode switch and provider block
 - **A7** Apply in demo mode, destroying at the end of every session
 - **A8** Move state to the S3 backend with native locking
 - **A9** Reorganize the repo layout
