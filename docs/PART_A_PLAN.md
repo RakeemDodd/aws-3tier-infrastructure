@@ -60,7 +60,7 @@ Each step has an ID (A0–A13). Branch names and pull request titles use it, so 
 - ✅ **A4** Use one troubleshooting format (Symptom, How I found it, Cause, Fix, Lesson) for new entries in the [build log](../BUILD_LOG.md)
 - ✅ **A5** Bootstrap the S3 state bucket and import the budgets
 - ✅ **A6** Add the demo-mode switch and provider block
-- **A7** Apply in demo mode, destroying at the end of every session
+- ✅ **A7** Apply in demo mode, destroying at the end of every session
 - **A8** Move state to the S3 backend with native locking
 - **A9** Reorganize the repo layout
 - **A10** Refactor into modules with `moved` blocks
@@ -75,7 +75,7 @@ Each step has an ID (A0–A13). Branch names and pull request titles use it, so 
 - **Surprise costs:** demo mode, two budgets, and destroying the stack the same day
 
 ## Cost plan
-Practice runs use demo mode and are destroyed the same day. Only the state bucket is kept. A $25 monthly budget (alerts at $10, $20 and $25, plus a forecast alert) and a $2 daily budget catch anything left running. Real monthly cost is measured and published in Part C.
+Practice runs use demo mode and are destroyed the same day. Only the bootstrap resources are kept: the state bucket, the budgets and the account's default EBS encryption. A $25 monthly budget (alerts at $10, $20 and $25, plus a forecast alert) and a $2 daily budget catch anything left running. Real monthly cost is measured and published in Part C.
 
 ## Done when
 - `terraform plan` shows no changes after the state migration
