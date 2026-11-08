@@ -126,6 +126,8 @@ Plan, decisions and trade-offs: [docs/PART_A_PLAN.md](docs/PART_A_PLAN.md). The 
 - Pinned the region, the Terraform version range and default tags (Project, Owner, ManagedBy) in a provider block, so the stack no longer depends on local CLI settings
 - Added a demo mode switch: practice builds use one NAT gateway and a single-AZ database while the network still spans two Availability Zones. Plans confirmed 28 resources in demo mode and 30 in the full design
 - Hardened the EC2 instance (IMDSv2 required, encrypted root disk, standard CPU credits, startup-script changes rebuild the instance, new Amazon Linux releases no longer force a replacement) and turned on EBS encryption by default for the account
+- Ran the first deploy in demo mode from a saved plan (28 resources), confirmed no drift right after the apply, and verified on the live resources: the web page loaded through the load balancer, IMDSv2 was required, the root disk was encrypted, CPU credits were standard and the database was single-AZ. Destroyed it the same session with a clean leftover check (about 25 minutes, roughly $0.05)
+- Added Terraform plan files to `.gitignore`, since a saved plan can contain sensitive values
 
 ### Troubleshooting
 
