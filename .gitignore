@@ -5,6 +5,7 @@
 *.tfvars
 crash.log
 crash.*.log
+*.tfplan
 
 # Override files
 override.tf
