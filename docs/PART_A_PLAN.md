@@ -62,7 +62,7 @@ Each step has an ID (A0–A13). Branch names and pull request titles use it, so 
 - ✅ **A6** Add the demo-mode switch and provider block
 - ✅ **A7** Apply in demo mode, destroying at the end of every session
 - ✅ **A8** Move state to the S3 backend with native locking
-- **A9** Reorganize the repo layout
+- ✅ **A9** Reorganize the repo layout
 - **A10** Refactor into modules with `moved` blocks
 - **A11** Run dev and prod from one codebase
 - **A12** Add the Environment tag and move the database password out of state

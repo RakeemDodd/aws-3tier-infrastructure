@@ -89,23 +89,52 @@ The real bugs hit and fixed during verification — an AMI variant without the S
 
 ## Project File Structure
 
+```
+aws-3tier-infrastructure/
+├── bootstrap/     State bucket, budgets and account settings (applied once, kept)
+├── envs/
+│   └── dev/       The dev environment: the full 3-tier stack
+├── scripts/       Helper scripts
+└── docs/          Plan, notes, diagram and screenshots
+```
+
+### `bootstrap/`
+
 | File | Description |
 |---|---|
+| `versions.tf` | Version constraints, AWS provider with default tags, and the S3 backend for bootstrap's own state |
+| `state_bucket.tf` | S3 state bucket: versioned, encrypted, public access blocked, HTTPS only, protected from deletion |
+| `budgets.tf` | Monthly and daily AWS budgets with email alerts, imported into Terraform |
+| `account_settings.tf` | EBS encryption on by default for the account |
+| `variables.tf` | Alert email input (the value lives in a git-ignored `terraform.tfvars`) |
+
+### `envs/dev/`
+
+| File | Description |
+|---|---|
+| `versions.tf` | Version constraints, AWS provider with default tags, and the S3 backend with native locking |
+| `variables.tf` | Inputs: database password, region, and the demo mode switch |
+| `locals.tf` | Settings derived from demo mode: second NAT gateway and Multi-AZ database |
 | `vpc.tf` | VPC and DNS settings |
 | `subnets.tf` | Public and private subnets across 2 AZs |
 | `internet_gateway.tf` | Internet Gateway for public subnets |
-| `nat_gateway.tf` | NAT Gateways and Elastic IPs for private subnet internet access |
+| `nat_gateway.tf` | NAT gateways and Elastic IPs (one in demo mode, two in the full design) |
 | `route_tables.tf` | Public and private route tables and associations |
-| `security_groups.tf` | Chained security groups — ALB → EC2 → RDS |
-| `ec2.tf` | EC2 instance, AMI lookup, and `user_data` bootstrap script |
+| `security_groups.tf` | Security groups chained by tier: ALB to EC2 to RDS |
+| `ec2.tf` | EC2 instance, AMI lookup, IMDSv2, encrypted root volume, and the `user_data` bootstrap script |
 | `iam.tf` | IAM role and instance profile for SSM access |
-| `rds.tf` | RDS MySQL instance and subnet group |
+| `rds.tf` | RDS MySQL instance and subnet group (single-AZ in demo mode, Multi-AZ in the full design) |
 | `alb.tf` | Application Load Balancer, target group, and listener |
 | `outputs.tf` | Terraform outputs |
-| `variables.tf` | Input variables (e.g. database password) |
-| `versions.tf` | Terraform and provider version constraints |
-| `terraform.tfvars` | Sensitive values — git-ignored, never committed |
-| `.gitignore` | Excludes state files, `.tfvars`, and other sensitive/generated files |
+| `.terraform.lock.hcl` | Locked provider versions |
+| `terraform.tfvars` | Database password, git-ignored and never committed |
+
+### Other files
+
+| File | Description |
+|---|---|
+| `scripts/leftover-check.sh` | Confirms nothing billable is still running after a destroy |
+| `.gitignore` | Excludes state, plan and `.tfvars` files, and other sensitive or generated files |
 | `BUILD_LOG.md` | Full milestone and debugging log |
 | `docs/PART_A_PLAN.md` | Part A plan: decisions and trade-offs |
 | `docs/EC2_NOTES.md` | Why each EC2 setting is set the way it is, and the gaps to close |
@@ -132,13 +161,32 @@ This build is scoped as a demo/learning project and intentionally leaves out a f
 
 ## Running This Yourself
 
+The state bucket name in the backend blocks is globally unique to this account, so change it in `bootstrap/versions.tf` and `envs/dev/versions.tf` first.
+
+**1. Bootstrap (once, from the repo root).** Creates the state bucket, budgets and account settings. On the very first run the bucket doesn't exist yet, so comment out the `backend "s3"` block, apply with local state, then restore the block and move the state into the bucket:
+
 ```bash
+cd bootstrap
 terraform init
-terraform plan
 terraform apply
+terraform init -migrate-state
 ```
 
-You'll need to supply a `terraform.tfvars` file with a `db_password` variable (see `variables.tf`). Remember to `terraform destroy` when done — this creates real, billable AWS resources (primarily NAT Gateways, the ALB, and RDS Multi-AZ).
+**2. The dev environment (from the repo root).** Add a `terraform.tfvars` in `envs/dev/` with `db_password` (see `variables.tf`). It runs in demo mode by default (one NAT gateway, single-AZ database) to keep practice runs cheap; set `demo_mode = false` for the full design.
+
+```bash
+cd envs/dev
+terraform init
+terraform plan -out=dev.tfplan
+terraform apply dev.tfplan
+```
+
+**3. Clean up the same day.** This creates real, billable AWS resources (mainly the NAT gateway, the ALB and RDS). Destroy the stack, then confirm nothing is left running:
+
+```bash
+terraform destroy
+../../scripts/leftover-check.sh
+```
 
 ---
 
