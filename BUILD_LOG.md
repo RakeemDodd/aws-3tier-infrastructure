@@ -123,6 +123,9 @@ Plan, decisions and trade-offs: [docs/PART_A_PLAN.md](docs/PART_A_PLAN.md). The 
 - Reviewed every EC2 setting, including the defaults the code doesn't set, and found the gaps to fix: an unencrypted root disk (account default encryption is off), IMDSv2 inherited from the image rather than enforced in code, AMI updates forcing instance replacement, and fully open egress ([docs/EC2_NOTES.md](docs/EC2_NOTES.md))
 - Built a separate bootstrap setup for Terraform's remote state: an S3 bucket that's versioned, encrypted, blocks all public access, only accepts HTTPS, expires old state versions after 90 days, and can't be destroyed by Terraform. Its own state lives in the same bucket
 - Brought the two console-created budgets under Terraform with import blocks, protected both from deletion, and kept the alert email out of the repo
+- Pinned the region, the Terraform version range and default tags (Project, Owner, ManagedBy) in a provider block, so the stack no longer depends on local CLI settings
+- Added a demo mode switch: practice builds use one NAT gateway and a single-AZ database while the network still spans two Availability Zones. Plans confirmed 28 resources in demo mode and 30 in the full design
+- Hardened the EC2 instance (IMDSv2 required, encrypted root disk, standard CPU credits, startup-script changes rebuild the instance, new Amazon Linux releases no longer force a replacement) and turned on EBS encryption by default for the account
 
 ### Troubleshooting
 

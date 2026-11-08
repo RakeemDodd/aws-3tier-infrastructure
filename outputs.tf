@@ -30,5 +30,5 @@ output "private_subnet_ids" {
 
 output "nat_gateway_ips" {
   description = "Public IPs of the NAT Gateways"
-  value       = [aws_eip.nat_a.public_ip, aws_eip.nat_b.public_ip]
+  value       = concat([aws_eip.nat_a.public_ip], aws_eip.nat_b[*].public_ip)
 }
