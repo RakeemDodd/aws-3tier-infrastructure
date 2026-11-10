@@ -2,8 +2,8 @@ resource "aws_lb" "main" {
   name               = "3tier-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = [aws_subnet.public_a.id, aws_subnet.public_b.id]
+  security_groups    = [var.security_group_id]
+  subnets            = var.subnet_ids
 
   tags = {
     Name = "3tier-alb"
@@ -14,7 +14,7 @@ resource "aws_lb_target_group" "main" {
   name     = "3tier-tg"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = aws_vpc.main.id
+  vpc_id   = var.vpc_id
 
   health_check {
     path                = "/"
@@ -31,7 +31,7 @@ resource "aws_lb_target_group" "main" {
 
 resource "aws_lb_target_group_attachment" "main" {
   target_group_arn = aws_lb_target_group.main.arn
-  target_id        = aws_instance.main.id
+  target_id        = var.instance_id
   port             = 80
 }
 

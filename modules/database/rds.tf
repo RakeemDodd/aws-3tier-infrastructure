@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "main" {
   name       = "app-db-subnet-group"
-  subnet_ids = [aws_subnet.private_a.id, aws_subnet.private_b.id]
+  subnet_ids = var.subnet_ids
 
   tags = {
     Name = "3tier-db-subnet-group"
@@ -18,8 +18,8 @@ resource "aws_db_instance" "main" {
   parameter_group_name   = "default.mysql8.0"
   skip_final_snapshot    = true
   db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.rds_sg.id]
-  multi_az               = local.db_multi_az
+  vpc_security_group_ids = [var.security_group_id]
+  multi_az               = var.multi_az
 
   tags = {
     Name = "3tier-rds"
