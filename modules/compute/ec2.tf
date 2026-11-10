@@ -12,8 +12,8 @@ data "aws_ami" "amazon_linux" {
 resource "aws_instance" "main" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = "t3.micro"
-  subnet_id              = aws_subnet.private_a.id
-  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+  subnet_id              = var.subnet_id
+  vpc_security_group_ids = [var.security_group_id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
   # Stay within free CPU credits instead of paying for extra bursts

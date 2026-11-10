@@ -7,7 +7,7 @@ resource "aws_eip" "nat_a" {
 }
 
 resource "aws_eip" "nat_b" {
-  count = local.second_nat_gateway ? 1 : 0
+  count = var.second_nat_gateway ? 1 : 0
 
   domain = "vpc"
 
@@ -28,7 +28,7 @@ resource "aws_nat_gateway" "nat_a" {
 }
 
 resource "aws_nat_gateway" "nat_b" {
-  count = local.second_nat_gateway ? 1 : 0
+  count = var.second_nat_gateway ? 1 : 0
 
   allocation_id = aws_eip.nat_b[count.index].id
   subnet_id     = aws_subnet.public_b.id

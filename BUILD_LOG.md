@@ -130,6 +130,7 @@ Plan, decisions and trade-offs: [docs/PART_A_PLAN.md](docs/PART_A_PLAN.md). The 
 - Added Terraform plan files to `.gitignore`, since a saved plan can contain sensitive values
 - Moved the app's Terraform state from my laptop into the S3 backend with native locking: deployed in demo mode, backed up the local state, ran `terraform init -migrate-state`, then confirmed the same 29 state entries and a no-changes plan reading from S3. Destroyed the stack through the S3 backend afterwards, with a clean leftover check
 - Reorganized the repo for multiple environments: moved the stack into `envs/dev/` with `git mv` so every file keeps its history, kept the same state key so no migration was needed, and confirmed the plan was unchanged (28 to add) from the new folder. Added `scripts/leftover-check.sh`, which checks for NAT gateways, Elastic IPs, load balancers, databases and instances after every destroy and fails if anything is left
+- Split the dev stack into five modules (network, security, compute, database and load balancer) that the dev environment calls, and recorded every address change in `moved` blocks. Proved it on a live deployment: the refactor's plan showed 28 moves with nothing added, changed or destroyed, the site kept serving through the change, and the stack was destroyed the same session
 
 ### Troubleshooting
 
@@ -156,3 +157,11 @@ Plan, decisions and trade-offs: [docs/PART_A_PLAN.md](docs/PART_A_PLAN.md). The 
 - **Cause:** the generator copies every value AWS returns, including defaults the provider only accepts together with other settings. Terraform documents the feature as experimental
 - **Fix:** removed `metrics` and the other empty defaults, added `ignore_changes = [metrics]` so Terraform leaves AWS's default alone, and applied only once the plan showed nothing but tag changes
 - **Lesson:** generated code is a first draft. Review it line by line, and only apply an import when the plan shows exactly the changes you intended
+
+#### Module refactor planned to replace the whole stack
+
+- **Symptom:** with the resources moved into modules, `terraform plan` against the live stack showed 28 to add and 28 to destroy, including `aws_db_instance.main will be destroyed (because aws_db_instance.main is not in configuration)`
+- **How I found it:** ran the plan against the live stack before adding any `moved` blocks, to see exactly what Terraform would do, then filtered it for the database to read the reason it gave
+- **Cause:** Terraform tracks each resource by its address in the code. Moving the database into a module changed its address from `aws_db_instance.main` to `module.database.aws_db_instance.main`, so Terraform saw one resource removed and another added, even though the settings were identical
+- **Fix:** added `moved` blocks mapping every old address to its new one. The plan dropped to 0 to add, 0 to change and 0 to destroy with 28 moves, and the apply only renamed entries in state
+- **Lesson:** a refactor that changes addresses is a destroy and recreate unless state is told otherwise. Read every plan for unexpected destroys, and keep the `moved` blocks in the code so any older state can still migrate
