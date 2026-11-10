@@ -64,7 +64,7 @@ The real bugs hit and fixed during verification — an AMI variant without the S
 ## Project Status
 
 - ✅ Infrastructure deployed successfully via Terraform, no manual console steps
-- ✅ Hand-written resources throughout — no black-box modules, every line is one I can explain
+- ✅ Hand-written resources throughout, organized into my own modules with no third-party code — every line is one I can explain
 - ✅ EC2 ↔ RDS connection verified with a live `mysql` login, not just a security group review
 - ✅ ALB verified by loading the live page from an external browser
 - ✅ EC2 access verified via AWS Systems Manager — no SSH keys, no open ports
@@ -91,11 +91,17 @@ The real bugs hit and fixed during verification — an AMI variant without the S
 
 ```
 aws-3tier-infrastructure/
-├── bootstrap/     State bucket, budgets and account settings (applied once, kept)
+├── bootstrap/          State bucket, budgets and account settings (applied once, kept)
+├── modules/            Reusable building blocks, one per layer
+│   ├── network/
+│   ├── security/
+│   ├── compute/
+│   ├── database/
+│   └── load_balancer/
 ├── envs/
-│   └── dev/       The dev environment: the full 3-tier stack
-├── scripts/       Helper scripts
-└── docs/          Plan, notes, diagram and screenshots
+│   └── dev/            The dev environment: calls the modules with dev settings
+├── scripts/            Helper scripts
+└── docs/               Plan, notes, diagram and screenshots
 ```
 
 ### `bootstrap/`
@@ -108,24 +114,28 @@ aws-3tier-infrastructure/
 | `account_settings.tf` | EBS encryption on by default for the account |
 | `variables.tf` | Alert email input (the value lives in a git-ignored `terraform.tfvars`) |
 
+### `modules/`
+
+Each module has its resources plus `variables.tf` (inputs), `outputs.tf` (what other modules can use) and `versions.tf` (provider requirements only; the provider itself comes from the environment).
+
+| Module | Resources | Inputs |
+|---|---|---|
+| `network` | VPC, 4 subnets across 2 AZs, Internet Gateway, NAT gateways and Elastic IPs (one in demo mode, two in the full design), route tables and associations | Second NAT gateway on or off |
+| `security` | Security groups chained by tier: ALB to EC2 to RDS | VPC |
+| `compute` | EC2 instance (AMI lookup, IMDSv2, encrypted root volume, `user_data` bootstrap script) and its IAM role and instance profile for SSM | Private subnet, security group |
+| `database` | RDS MySQL instance and subnet group (single-AZ in demo mode, Multi-AZ in the full design) | Private subnets, security group, password, Multi-AZ on or off |
+| `load_balancer` | Application Load Balancer, target group and attachment, listener | VPC, public subnets, security group, instance |
+
 ### `envs/dev/`
 
 | File | Description |
 |---|---|
+| `main.tf` | Calls the five modules and wires each module's outputs into the next one's inputs |
+| `moved.tf` | Records where each resource moved when the code was split into modules, so Terraform renamed them in state instead of replacing them |
 | `versions.tf` | Version constraints, AWS provider with default tags, and the S3 backend with native locking |
 | `variables.tf` | Inputs: database password, region, and the demo mode switch |
 | `locals.tf` | Settings derived from demo mode: second NAT gateway and Multi-AZ database |
-| `vpc.tf` | VPC and DNS settings |
-| `subnets.tf` | Public and private subnets across 2 AZs |
-| `internet_gateway.tf` | Internet Gateway for public subnets |
-| `nat_gateway.tf` | NAT gateways and Elastic IPs (one in demo mode, two in the full design) |
-| `route_tables.tf` | Public and private route tables and associations |
-| `security_groups.tf` | Security groups chained by tier: ALB to EC2 to RDS |
-| `ec2.tf` | EC2 instance, AMI lookup, IMDSv2, encrypted root volume, and the `user_data` bootstrap script |
-| `iam.tf` | IAM role and instance profile for SSM access |
-| `rds.tf` | RDS MySQL instance and subnet group (single-AZ in demo mode, Multi-AZ in the full design) |
-| `alb.tf` | Application Load Balancer, target group, and listener |
-| `outputs.tf` | Terraform outputs |
+| `outputs.tf` | Terraform outputs, passed through from the modules |
 | `.terraform.lock.hcl` | Locked provider versions |
 | `terraform.tfvars` | Database password, git-ignored and never committed |
 
