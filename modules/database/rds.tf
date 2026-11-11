@@ -1,13 +1,14 @@
 resource "aws_db_subnet_group" "main" {
-  name       = "app-db-subnet-group"
+  name       = "${var.name_prefix}-db-subnets"
   subnet_ids = var.subnet_ids
 
   tags = {
-    Name = "3tier-db-subnet-group"
+    Name = "${var.name_prefix}-db-subnets"
   }
 }
 
 resource "aws_db_instance" "main" {
+  identifier             = "${var.name_prefix}-db"
   allocated_storage      = 10
   db_name                = "appdb"
   engine                 = "mysql"
@@ -22,6 +23,6 @@ resource "aws_db_instance" "main" {
   multi_az               = var.multi_az
 
   tags = {
-    Name = "3tier-rds"
+    Name = "${var.name_prefix}-db"
   }
 }

@@ -2,7 +2,7 @@ resource "aws_eip" "nat_a" {
   domain = "vpc"
 
   tags = {
-    Name = "nat-eip-a"
+    Name = "${var.name_prefix}-nat-eip-a"
   }
 }
 
@@ -12,7 +12,7 @@ resource "aws_eip" "nat_b" {
   domain = "vpc"
 
   tags = {
-    Name = "nat-eip-b"
+    Name = "${var.name_prefix}-nat-eip-b"
   }
 }
 
@@ -21,7 +21,7 @@ resource "aws_nat_gateway" "nat_a" {
   subnet_id     = aws_subnet.public_a.id
 
   tags = {
-    Name = "nat-gw-a"
+    Name = "${var.name_prefix}-nat-a"
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -34,7 +34,7 @@ resource "aws_nat_gateway" "nat_b" {
   subnet_id     = aws_subnet.public_b.id
 
   tags = {
-    Name = "nat-gw-b"
+    Name = "${var.name_prefix}-nat-b"
   }
 
   depends_on = [aws_internet_gateway.main]

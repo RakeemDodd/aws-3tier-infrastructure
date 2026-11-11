@@ -1,5 +1,5 @@
 resource "aws_security_group" "alb_sg" {
-  name        = "alb-sg"
+  name        = "${var.name_prefix}-alb-sg"
   description = "Security group for ALB"
   vpc_id      = var.vpc_id
 
@@ -18,12 +18,12 @@ resource "aws_security_group" "alb_sg" {
   }
 
   tags = {
-    Name = "alb-sg"
+    Name = "${var.name_prefix}-alb-sg"
   }
 }
 
 resource "aws_security_group" "ec2_sg" {
-  name        = "ec2-sg"
+  name        = "${var.name_prefix}-ec2-sg"
   description = "Security group for EC2"
   vpc_id      = var.vpc_id
 
@@ -42,12 +42,12 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   tags = {
-    Name = "ec2-sg"
+    Name = "${var.name_prefix}-ec2-sg"
   }
 }
 
 resource "aws_security_group" "rds_sg" {
-  name        = "rds-sg"
+  name        = "${var.name_prefix}-rds-sg"
   description = "Security group for RDS"
   vpc_id      = var.vpc_id
 
@@ -66,6 +66,6 @@ resource "aws_security_group" "rds_sg" {
   }
 
   tags = {
-    Name = "rds-sg"
+    Name = "${var.name_prefix}-rds-sg"
   }
 }

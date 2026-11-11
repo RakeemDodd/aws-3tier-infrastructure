@@ -1,5 +1,5 @@
 resource "aws_iam_role" "ec2_ssm_role" {
-  name = "3tier-ec2-ssm-role"
+  name = "${var.name_prefix}-ec2-ssm-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -15,7 +15,7 @@ resource "aws_iam_role" "ec2_ssm_role" {
   })
 
   tags = {
-    Name = "3tier-ec2-ssm-role"
+    Name = "${var.name_prefix}-ec2-ssm-role"
   }
 }
 
@@ -25,6 +25,6 @@ resource "aws_iam_role_policy_attachment" "ssm_policy" {
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "3tier-ec2-profile"
+  name = "${var.name_prefix}-ec2-profile"
   role = aws_iam_role.ec2_ssm_role.name
 }
