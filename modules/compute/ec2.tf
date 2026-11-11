@@ -45,7 +45,7 @@ resource "aws_instance" "main" {
   EOF
 
   tags = {
-    Name = "3tier-ec2"
+    Name = "${var.name_prefix}-ec2"
   }
 
   lifecycle {

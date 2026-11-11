@@ -1,17 +1,17 @@
 resource "aws_lb" "main" {
-  name               = "3tier-alb"
+  name               = "${var.name_prefix}-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [var.security_group_id]
   subnets            = var.subnet_ids
 
   tags = {
-    Name = "3tier-alb"
+    Name = "${var.name_prefix}-alb"
   }
 }
 
 resource "aws_lb_target_group" "main" {
-  name     = "3tier-tg"
+  name     = "${var.name_prefix}-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = var.vpc_id
@@ -25,7 +25,7 @@ resource "aws_lb_target_group" "main" {
   }
 
   tags = {
-    Name = "3tier-tg"
+    Name = "${var.name_prefix}-tg"
   }
 }
 

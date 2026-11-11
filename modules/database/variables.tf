@@ -1,3 +1,8 @@
+variable "name_prefix" {
+  description = "Prefix for resource names, environment first (for example dev-3tier)"
+  type        = string
+}
+
 variable "subnet_ids" {
   description = "IDs of the private subnets for the database subnet group"
   type        = list(string)
