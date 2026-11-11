@@ -83,7 +83,7 @@ The real bugs hit and fixed during verification — an AMI variant without the S
 | `ec2_private_ip` | Private IP of the EC2 instance |
 | `rds_endpoint` | RDS connection endpoint (host:port) |
 | `alb_dns_name` | Public DNS name of the load balancer — this is the URL to visit |
-| `nat_gateway_ips` | Public IPs of the two NAT Gateways |
+| `nat_gateway_ips` | Public IPs of the NAT gateways (one in demo mode, two in the full design) |
 
 ---
 
@@ -99,7 +99,8 @@ aws-3tier-infrastructure/
 │   ├── database/
 │   └── load_balancer/
 ├── envs/
-│   └── dev/            The dev environment: calls the modules with dev settings
+│   ├── dev/            The dev environment: calls the modules with dev settings (demo mode)
+│   └── prod/           The prod environment: the same modules with prod settings (full design)
 ├── scripts/            Helper scripts
 └── docs/               Plan, notes, diagram and screenshots
 ```
@@ -116,28 +117,30 @@ aws-3tier-infrastructure/
 
 ### `modules/`
 
-Each module has its resources plus `variables.tf` (inputs), `outputs.tf` (what other modules can use) and `versions.tf` (provider requirements only; the provider itself comes from the environment).
+Each module has its resources plus `variables.tf` (inputs), `outputs.tf` (what other modules can use) and `versions.tf` (provider requirements only; the provider itself comes from the environment). Every resource is named `<environment>-3tier-<resource>`, for example `prod-3tier-alb`.
 
 | Module | Resources | Inputs |
 |---|---|---|
-| `network` | VPC, 4 subnets across 2 AZs, Internet Gateway, NAT gateways and Elastic IPs (one in demo mode, two in the full design), route tables and associations | Second NAT gateway on or off |
-| `security` | Security groups chained by tier: ALB to EC2 to RDS | VPC |
-| `compute` | EC2 instance (AMI lookup, IMDSv2, encrypted root volume, `user_data` bootstrap script) and its IAM role and instance profile for SSM | Private subnet, security group |
-| `database` | RDS MySQL instance and subnet group (single-AZ in demo mode, Multi-AZ in the full design) | Private subnets, security group, password, Multi-AZ on or off |
-| `load_balancer` | Application Load Balancer, target group and attachment, listener | VPC, public subnets, security group, instance |
+| `network` | VPC, 4 subnets across 2 AZs, Internet Gateway, NAT gateways and Elastic IPs (one in demo mode, two in the full design), route tables and associations | Name prefix, VPC address range, second NAT gateway on or off |
+| `security` | Security groups chained by tier: ALB to EC2 to RDS | Name prefix, VPC |
+| `compute` | EC2 instance (AMI lookup, IMDSv2, encrypted root volume, `user_data` bootstrap script) and its IAM role and instance profile for SSM | Name prefix, private subnet, security group |
+| `database` | RDS MySQL instance and subnet group (single-AZ in demo mode, Multi-AZ in the full design) | Name prefix, private subnets, security group, password, Multi-AZ on or off |
+| `load_balancer` | Application Load Balancer, target group and attachment, listener | Name prefix, VPC, public subnets, security group, instance |
 
-### `envs/dev/`
+### `envs/dev/` and `envs/prod/`
+
+Both environments use the same files, so a change to the modules reaches both. Each has its own state, so applying one never touches the other.
 
 | File | Description |
 |---|---|
-| `main.tf` | Calls the five modules and wires each module's outputs into the next one's inputs |
-| `moved.tf` | Records where each resource moved when the code was split into modules, so Terraform renamed them in state instead of replacing them |
-| `versions.tf` | Version constraints, AWS provider with default tags, and the S3 backend with native locking |
-| `variables.tf` | Inputs: database password, region, and the demo mode switch |
-| `locals.tf` | Settings derived from demo mode: second NAT gateway and Multi-AZ database |
+| `main.tf` | Calls the five modules and wires each module's outputs into the next one's inputs (identical in both) |
+| `locals.tf` | The environment's name, name prefix and VPC range (dev `10.0.0.0/16`, prod `10.1.0.0/16`), plus the settings derived from demo mode |
+| `variables.tf` | Inputs: database password, region, and the demo mode switch (on by default in dev, off in prod) |
+| `versions.tf` | Version constraints, AWS provider with default tags, and the S3 backend with native locking, with a separate state key per environment |
 | `outputs.tf` | Terraform outputs, passed through from the modules |
-| `.terraform.lock.hcl` | Locked provider versions |
-| `terraform.tfvars` | Database password, git-ignored and never committed |
+| `moved.tf` | Dev only: records where each resource moved when the code was split into modules, so Terraform renamed them in state instead of replacing them |
+| `.terraform.lock.hcl` | Locked provider versions, the same in both environments |
+| `terraform.tfvars` | Database password, separate per environment, git-ignored and never committed |
 
 ### Other files
 
@@ -171,7 +174,7 @@ This build is scoped as a demo/learning project and intentionally leaves out a f
 
 ## Running This Yourself
 
-The state bucket name in the backend blocks is globally unique to this account, so change it in `bootstrap/versions.tf` and `envs/dev/versions.tf` first.
+The state bucket name in the backend blocks is globally unique to this account, so change it in `bootstrap/versions.tf`, `envs/dev/versions.tf` and `envs/prod/versions.tf` first.
 
 **1. Bootstrap (once, from the repo root).** Creates the state bucket, budgets and account settings. On the very first run the bucket doesn't exist yet, so comment out the `backend "s3"` block, apply with local state, then restore the block and move the state into the bucket:
 
@@ -182,10 +185,10 @@ terraform apply
 terraform init -migrate-state
 ```
 
-**2. The dev environment (from the repo root).** Add a `terraform.tfvars` in `envs/dev/` with `db_password` (see `variables.tf`). It runs in demo mode by default (one NAT gateway, single-AZ database) to keep practice runs cheap; set `demo_mode = false` for the full design.
+**2. An environment (from the repo root).** Add a `terraform.tfvars` with `db_password` (see `variables.tf`) in the environment's folder. Dev runs in demo mode by default (one NAT gateway, single-AZ database) to keep practice runs cheap; prod runs the full design (two NAT gateways, Multi-AZ database).
 
 ```bash
-cd envs/dev
+cd envs/dev    # or envs/prod
 terraform init
 terraform plan -out=dev.tfplan
 terraform apply dev.tfplan
