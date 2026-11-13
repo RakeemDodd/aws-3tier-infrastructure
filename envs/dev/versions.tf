@@ -22,9 +22,10 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project   = "aws-3tier-infrastructure"
-      Owner     = "rakeem-dodd"
-      ManagedBy = "terraform"
+      Project     = "aws-3tier-infrastructure"
+      Environment = local.environment
+      Owner       = "rakeem-dodd"
+      ManagedBy   = "terraform"
     }
   }
 }

@@ -13,12 +13,6 @@ variable "security_group_id" {
   type        = string
 }
 
-variable "db_password" {
-  description = "Master password for the database"
-  type        = string
-  sensitive   = true
-}
-
 variable "multi_az" {
   description = "Run a standby copy in a second Availability Zone. False in demo mode."
   type        = bool
