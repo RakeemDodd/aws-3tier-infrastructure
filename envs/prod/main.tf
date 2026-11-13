@@ -27,7 +27,6 @@ module "database" {
   name_prefix       = local.name_prefix
   subnet_ids        = module.network.private_subnet_ids
   security_group_id = module.security.rds_sg_id
-  db_password       = var.db_password
   multi_az          = local.db_multi_az
 }
 

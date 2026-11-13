@@ -32,3 +32,8 @@ output "nat_gateway_ips" {
   description = "Public IPs of the NAT Gateways"
   value       = module.network.nat_gateway_ips
 }
+
+output "db_secret_arn" {
+  description = "ARN of the Secrets Manager secret that holds the database master password"
+  value       = module.database.secret_arn
+}
