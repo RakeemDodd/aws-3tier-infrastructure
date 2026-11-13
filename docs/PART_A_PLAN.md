@@ -65,7 +65,7 @@ Each step has an ID (A0–A13). Branch names and pull request titles use it, so 
 - ✅ **A9** Reorganize the repo layout
 - ✅ **A10** Refactor into modules with `moved` blocks
 - ✅ **A11** Run dev and prod from one codebase
-- **A12** Add the Environment tag and move the database password out of state
+- ✅ **A12** Add the Environment tag and move the database password out of state
 - **A13** Build the GitHub Actions pipeline
 
 ## Risks and how they're handled

@@ -31,7 +31,7 @@ This is a rebuild of an [earlier version](https://github.com/RakeemDodd/Terrafor
 - **2 NAT Gateways** (one per AZ) so private subnets can reach the internet without being reachable from it
 - **Application Load Balancer** across both public subnets, routing to EC2
 - **EC2 instance** in a private subnet, running Apache, provisioned entirely via Terraform `user_data`
-- **RDS MySQL 8.0** with **Multi-AZ** enabled, in the private subnets
+- **RDS MySQL 8.0** with **Multi-AZ** enabled, in the private subnets, with encrypted storage and a master password that RDS generates, stores in Secrets Manager and rotates
 - **Security groups chained by tier** — ALB → EC2 → RDS, no open database or app-server ports
 - **IAM role + instance profile** giving the EC2 instance AWS Systems Manager access, so it can be verified without SSH keys or open ports
 
@@ -69,7 +69,8 @@ The real bugs hit and fixed during verification — an AMI variant without the S
 - ✅ ALB verified by loading the live page from an external browser
 - ✅ EC2 access verified via AWS Systems Manager — no SSH keys, no open ports
 - ✅ Full teardown verified — `terraform destroy` confirmed and cross-checked in the AWS Console
-- ⚙️ Not yet built: HTTPS, Secrets Manager integration, CloudWatch alarms (see [Known Limitations](#known-limitations--next-steps))
+- ✅ No database password in code, on a laptop, or in Terraform state — RDS manages it in Secrets Manager
+- ⚙️ Not yet built: HTTPS, CloudWatch alarms (see [Known Limitations](#known-limitations--next-steps))
 
 ---
 
@@ -84,6 +85,7 @@ The real bugs hit and fixed during verification — an AMI variant without the S
 | `rds_endpoint` | RDS connection endpoint (host:port) |
 | `alb_dns_name` | Public DNS name of the load balancer — this is the URL to visit |
 | `nat_gateway_ips` | Public IPs of the NAT gateways (one in demo mode, two in the full design) |
+| `db_secret_arn` | ARN of the Secrets Manager secret that holds the database password (the secret's address, not the password) |
 
 ---
 
@@ -124,7 +126,7 @@ Each module has its resources plus `variables.tf` (inputs), `outputs.tf` (what o
 | `network` | VPC, 4 subnets across 2 AZs, Internet Gateway, NAT gateways and Elastic IPs (one in demo mode, two in the full design), route tables and associations | Name prefix, VPC address range, second NAT gateway on or off |
 | `security` | Security groups chained by tier: ALB to EC2 to RDS | Name prefix, VPC |
 | `compute` | EC2 instance (AMI lookup, IMDSv2, encrypted root volume, `user_data` bootstrap script) and its IAM role and instance profile for SSM | Name prefix, private subnet, security group |
-| `database` | RDS MySQL instance and subnet group (single-AZ in demo mode, Multi-AZ in the full design) | Name prefix, private subnets, security group, password, Multi-AZ on or off |
+| `database` | RDS MySQL instance (encrypted storage, password managed by RDS in Secrets Manager) and subnet group (single-AZ in demo mode, Multi-AZ in the full design) | Name prefix, private subnets, security group, Multi-AZ on or off |
 | `load_balancer` | Application Load Balancer, target group and attachment, listener | Name prefix, VPC, public subnets, security group, instance |
 
 ### `envs/dev/` and `envs/prod/`
@@ -135,12 +137,11 @@ Both environments use the same files, so a change to the modules reaches both. E
 |---|---|
 | `main.tf` | Calls the five modules and wires each module's outputs into the next one's inputs (identical in both) |
 | `locals.tf` | The environment's name, name prefix and VPC range (dev `10.0.0.0/16`, prod `10.1.0.0/16`), plus the settings derived from demo mode |
-| `variables.tf` | Inputs: database password, region, and the demo mode switch (on by default in dev, off in prod) |
-| `versions.tf` | Version constraints, AWS provider with default tags, and the S3 backend with native locking, with a separate state key per environment |
-| `outputs.tf` | Terraform outputs, passed through from the modules |
+| `variables.tf` | Inputs: region and the demo mode switch (on by default in dev, off in prod) |
+| `versions.tf` | Version constraints, AWS provider with default tags (Project, Environment, Owner, ManagedBy), and the S3 backend with native locking, with a separate state key per environment |
+| `outputs.tf` | Terraform outputs, passed through from the modules, including the database secret's ARN |
 | `moved.tf` | Dev only: records where each resource moved when the code was split into modules, so Terraform renamed them in state instead of replacing them |
 | `.terraform.lock.hcl` | Locked provider versions, the same in both environments |
-| `terraform.tfvars` | Database password, separate per environment, git-ignored and never committed |
 
 ### Other files
 
@@ -157,7 +158,7 @@ Both environments use the same files, so a change to the modules reaches both. E
 ## Tech Stack
 
 - Terraform (`~> 6.0` AWS provider)
-- AWS: VPC, EC2, RDS, ALB, NAT Gateway, IAM, Systems Manager
+- AWS: VPC, EC2, RDS, ALB, NAT Gateway, IAM, Systems Manager, Secrets Manager
 - Amazon Linux 2023
 
 ---
@@ -167,7 +168,6 @@ Both environments use the same files, so a change to the modules reaches both. E
 This build is scoped as a demo/learning project and intentionally leaves out a few things that would matter in a persistent production environment:
 
 - **No HTTPS** — the ALB listener is HTTP-only. Adding this would require a registered domain and an ACM certificate, which didn't fit a short-lived demo.
-- **No Secrets Manager** — the database password is passed via a git-ignored `terraform.tfvars` file rather than AWS Secrets Manager. Fine for a single-developer demo; a team environment would use Secrets Manager for rotation and access control.
 - **No CloudWatch alarms/monitoring** — this infrastructure exists for a few minutes at a time for testing, not as an always-on service, so there was nothing meaningful to alert on.
 
 ---
@@ -185,7 +185,7 @@ terraform apply
 terraform init -migrate-state
 ```
 
-**2. An environment (from the repo root).** Add a `terraform.tfvars` with `db_password` (see `variables.tf`) in the environment's folder. Dev runs in demo mode by default (one NAT gateway, single-AZ database) to keep practice runs cheap; prod runs the full design (two NAT gateways, Multi-AZ database).
+**2. An environment (from the repo root).** No password file is needed: RDS creates the database password and keeps it in Secrets Manager. Dev runs in demo mode by default (one NAT gateway, single-AZ database) to keep practice runs cheap; prod runs the full design (two NAT gateways, Multi-AZ database).
 
 ```bash
 cd envs/dev    # or envs/prod
